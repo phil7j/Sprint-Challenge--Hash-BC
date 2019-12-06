@@ -1,6 +1,6 @@
 import hashlib
 import requests
-
+import json
 import sys
 
 from uuid import uuid4
@@ -23,14 +23,17 @@ def proof_of_work(last_proof):
     start = timer()
 
     print("Searching for next proof")
-    proof = 0
-    #  TODO: Your code here
-
+    proof = 10000000
+    encode_proof = f'{last_proof}'.encode()
+    last_hash = hashlib.sha256(encode_proof).hexdigest()
+    # print("current hash", last_hash)
+    while valid_proof(last_hash, proof) is False:
+        proof += 1
     print("Proof found: " + str(proof) + " in " + str(timer() - start))
     return proof
 
 
-def valid_proof(last_hash, proof):
+def valid_proof(last_proof, proof):
     """
     Validates the Proof:  Multi-ouroborus:  Do the last six characters of
     the hash of the last proof match the first six characters of the hash
@@ -40,7 +43,13 @@ def valid_proof(last_hash, proof):
     """
 
     # TODO: Your code here!
-    pass
+    guess = f'{proof}'.encode()
+    guess_hash = hashlib.sha256(guess).hexdigest()
+    # last_proof = f'{last_hash}'.encode()
+    # proof_hash = hashlib.sha256(last_proof).hexdigest()
+    # print(guess_hash)
+    return last_proof[-6:] == guess_hash[:6]
+    # return last_proof[-6:0] == guess_hash[:6]
 
 
 if __name__ == '__main__':
@@ -66,8 +75,9 @@ if __name__ == '__main__':
         # Get the last proof from the server
         r = requests.get(url=node + "/last_proof")
         data = r.json()
+        # print("HERES LAST PROOF", data['proof'])
         new_proof = proof_of_work(data.get('proof'))
-
+        # print("Sending to server")
         post_data = {"proof": new_proof,
                      "id": id}
 
